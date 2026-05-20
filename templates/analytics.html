@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="topbar">
+
+    <h1>Analytics</h1>
+
+</div>
+
+<!-- ANALYTICS STATS -->
+
+<div class="analytics-stats">
+
+    <div class="analytics-card">
+
+        <small>Average Views</small>
+
+        <h2>
+            {{
+            (
+            total_views / videos|length
+            ) | round(0)
+            }}
+        </h2>
+
+    </div>
+
+    <div class="analytics-card">
+
+        <small>Average Likes</small>
+
+        <h2>
+            {{
+            (
+            total_likes / videos|length
+            ) | round(0)
+            }}
+        </h2>
+
+    </div>
+
+    <div class="analytics-card">
+
+        <small>Average Comments</small>
+
+        <h2>
+            {{
+            (
+            total_comments / videos|length
+            ) | round(0)
+            }}
+        </h2>
+
+    </div>
+
+</div>
+
+<!-- MAIN CHART -->
+
+<div class="main-chart-container">
+
+    <div class="chart-header">
+
+        <div>
+
+            <small>Performance Overview</small>
+
+            <h2>Views & Engagement</h2>
+
+        </div>
+
+    </div>
+
+    <canvas id="performanceChart"></canvas>
+
+</div>
+
+<!-- SECONDARY CHARTS -->
+
+<div class="bottom-charts">
+
+    <div class="small-chart">
+
+        <div class="chart-header">
+
+            <div>
+
+                <small>Likes Distribution</small>
+
+                <h2>Likes Analytics</h2>
+
+            </div>
+
+        </div>
+
+        <canvas id="likesChart"></canvas>
+
+    </div>
+
+    <div class="small-chart">
+
+        <div class="chart-header">
+
+            <div>
+
+                <small>Comments Distribution</small>
+
+                <h2>Comments Analytics</h2>
+
+            </div>
+
+        </div>
+
+        <canvas id="commentsChart"></canvas>
+
+    </div>
+
+</div>
+
+<style>
+
+.analytics-stats{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+
+    gap:22px;
+
+    margin-bottom:30px;
+}
+
+.analytics-card{
+
+    background:rgba(255,255,255,0.05);
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    backdrop-filter:blur(20px);
+
+    border-radius:28px;
+
+    padding:28px;
+}
+
+.analytics-card small{
+
+    color:#94a3b8;
+
+    font-size:14px;
+}
+
+.analytics-card h2{
+
+    margin-top:18px;
+
+    font-size:42px;
+
+    font-weight:600;
+}
+
+.main-chart-container{
+
+    background:rgba(255,255,255,0.05);
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    border-radius:32px;
+
+    padding:30px;
+
+    margin-bottom:30px;
+
+    backdrop-filter:blur(20px);
+}
+
+.chart-header{
+
+    margin-bottom:25px;
+}
+
+.chart-header small{
+
+    color:#94a3b8;
+}
+
+.chart-header h2{
+
+    margin-top:8px;
+
+    font-size:28px;
+}
+
+.bottom-charts{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:25px;
+}
+
+.small-chart{
+
+    background:rgba(255,255,255,0.05);
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    border-radius:30px;
+
+    padding:28px;
+
+    backdrop-filter:blur(20px);
+}
+
+@media(max-width:1000px){
+
+    .bottom-charts{
+
+        grid-template-columns:1fr;
+    }
+}
+
+</style>
+
+<script>
+
+const videoTitles = [
+    {% for video in videos %}
+        "{{ video.video_title }}",
+    {% endfor %}
+];
+
+const videoViews = [
+    {% for video in videos %}
+        {{ video.views }},
+    {% endfor %}
+];
+
+const videoLikes = [
+    {% for video in videos %}
+        {{ video.likes }},
+    {% endfor %}
+];
+
+const videoComments = [
+    {% for video in videos %}
+        {{ video.comments }},
+    {% endfor %}
+];
+
+// MAIN PERFORMANCE CHART
+
+new Chart(
+    document.getElementById('performanceChart'),
+    {
+
+        type:'line',
+
+        data:{
+
+            labels:videoTitles,
+
+            datasets:[
+
+                {
+                    label:'Views',
+                    data:videoViews,
+                    borderColor:'#ffffff',
+                    backgroundColor:'rgba(255,255,255,0.05)',
+                    tension:0.4,
+                    fill:true,
+                    borderWidth:2
+                },
+
+                {
+                    label:'Likes',
+                    data:videoLikes,
+                    borderColor:'#888888',
+                    tension:0.4,
+                    borderWidth:2
+                }
+            ]
+        },
+
+        options:{
+
+            responsive:true,
+
+            plugins:{
+
+                legend:{
+                    labels:{
+                        color:'white'
+                    }
+                }
+            },
+
+            scales:{
+
+                x:{
+                    ticks:{
+                        color:'#94a3b8'
+                    },
+                    grid:{
+                        color:'rgba(255,255,255,0.05)'
+                    }
+                },
+
+                y:{
+                    ticks:{
+                        color:'#94a3b8'
+                    },
+                    grid:{
+                        color:'rgba(255,255,255,0.05)'
+                    }
+                }
+            }
+        }
+    }
+);
+
+// LIKES CHART
+
+new Chart(
+    document.getElementById('likesChart'),
+    {
+
+        type:'doughnut',
+
+        data:{
+
+            labels:videoTitles,
+
+            datasets:[{
+                data:videoLikes
+            }]
+        }
+    }
+);
+
+// COMMENTS CHART
+
+new Chart(
+    document.getElementById('commentsChart'),
+    {
+
+        type:'bar',
+
+        data:{
+
+            labels:videoTitles,
+
+            datasets:[{
+                label:'Comments',
+                data:videoComments,
+                borderRadius:10
+            }]
+        },
+
+        options:{
+
+            plugins:{
+                legend:{
+                    labels:{
+                        color:'white'
+                    }
+                }
+            },
+
+            scales:{
+
+                x:{
+                    ticks:{
+                        color:'#94a3b8'
+                    },
+                    grid:{
+                        color:'rgba(255,255,255,0.05)'
+                    }
+                },
+
+                y:{
+                    ticks:{
+                        color:'#94a3b8'
+                    },
+                    grid:{
+                        color:'rgba(255,255,255,0.05)'
+                    }
+                }
+            }
+        }
+    }
+);
+
+</script>
+
+{% endblock %}

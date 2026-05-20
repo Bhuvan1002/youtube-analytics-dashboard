@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="topbar">
+
+    <h1>Reports</h1>
+
+</div>
+
+<!-- REPORT GRID -->
+
+<div class="report-grid">
+
+    <!-- TOP VIDEO -->
+
+    <div class="report-card large-card">
+
+        <small>Top Performing Video</small>
+
+        <h2>
+            {{ top_video.video_title }}
+        </h2>
+
+        <p>
+            {{ top_video.views }} views
+        </p>
+
+    </div>
+
+    <!-- MOST LIKED -->
+
+    <div class="report-card">
+
+        <small>Most Liked Video</small>
+
+        <h3>
+            {{ most_liked.likes }}
+        </h3>
+
+        <p>
+            {{ most_liked.video_title }}
+        </p>
+
+    </div>
+
+    <!-- ENGAGEMENT -->
+
+    <div class="report-card">
+
+        <small>Engagement Rate</small>
+
+        <h3>
+            {{ engagement_rate }}%
+        </h3>
+
+        <p>
+            Audience Interaction
+        </p>
+
+    </div>
+
+    <!-- LOWEST VIDEO -->
+
+    <div class="report-card large-card">
+
+        <small>Lowest Performing Video</small>
+
+        <h2>
+            {{ lowest_video.video_title }}
+        </h2>
+
+        <p>
+            {{ lowest_video.views }} views
+        </p>
+
+    </div>
+
+</div>
+
+<!-- AI SUMMARY -->
+
+<div class="ai-summary">
+
+    <small>Performance Summary</small>
+
+    <h2>
+        Channel Analytics Overview
+    </h2>
+
+    <p>
+
+        Your channel currently has
+        {{ total_views }} total views,
+        {{ total_likes }} likes,
+        and
+        {{ total_comments }} comments.
+
+        The highest engagement was observed
+        on videos with strong viewer interaction.
+
+        Current engagement rate is
+        {{ engagement_rate }}%.
+
+    </p>
+
+</div>
+
+{% endblock %}

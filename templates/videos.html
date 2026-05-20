@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="topbar videos-topbar">
+
+    <h1>Videos</h1>
+
+    <div class="youtube-search">
+
+        <input
+            type="text"
+            id="videoSearch"
+            placeholder="Search videos"
+        >
+
+    </div>
+
+</div>
+
+<div class="youtube-feed">
+
+    {% for video in videos %}
+
+    <div class="youtube-card">
+
+        <!-- THUMBNAIL -->
+
+        <div class="thumb-container">
+
+            <img
+                src="https://img.youtube.com/vi/{{ video.video_id }}/hqdefault.jpg"
+                class="yt-thumbnail"
+            >
+
+        </div>
+
+        <!-- VIDEO DETAILS -->
+
+        <div class="yt-details">
+
+            <div class="channel-icon">
+
+                ▶
+
+            </div>
+
+            <div class="yt-text">
+
+                <h3>
+                    {{ video.video_title }}
+                </h3>
+
+                <p>
+                    {{ video.views }} views
+                    •
+                    {{ video.likes }} likes
+                </p>
+
+                <span>
+                    {{ video.publish_date }}
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+<script>
+
+const searchInput =
+document.getElementById('videoSearch');
+
+searchInput.addEventListener(
+    'keyup',
+    function(){
+
+        const value =
+        this.value.toLowerCase();
+
+        const videos =
+        document.querySelectorAll(
+            '.youtube-card'
+        );
+
+        videos.forEach(video => {
+
+            const title =
+            video.innerText.toLowerCase();
+
+            if(title.includes(value)){
+
+                video.style.display='block';
+
+            }else{
+
+                video.style.display='none';
+            }
+        });
+    }
+);
+
+</script>
+
+{% endblock %}

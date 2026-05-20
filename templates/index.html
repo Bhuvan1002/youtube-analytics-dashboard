@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="topbar">
+
+    <h1>Dashboard</h1>
+
+</div>
+<!-- KPI CARDS -->
+
+<div class="dashboard-grid">
+
+    <!-- MAIN CARD -->
+
+    <div class="hero-card">
+
+        <div class="hero-top">
+
+            <div>
+                <small>Total Channel Views</small>
+                <h1>{{ total_views }}</h1>
+            </div>
+
+            <div class="hero-icon">
+                ▶
+            </div>
+
+        </div>
+
+        <div class="hero-bottom">
+
+            <span>
+                Live Analytics Overview
+            </span>
+
+        </div>
+
+    </div>
+
+    <!-- SIDE CARDS -->
+
+    <div class="mini-card">
+
+        <small>Total Likes</small>
+
+        <h2>{{ total_likes }}</h2>
+
+    </div>
+
+    <div class="mini-card">
+
+        <small>Total Comments</small>
+
+        <h2>{{ total_comments }}</h2>
+
+    </div>
+
+    <div class="mini-card">
+
+        <small>Total Videos</small>
+
+        <h2>{{ videos|length }}</h2>
+
+    </div>
+
+</div>
+
+
+{% endblock %}
