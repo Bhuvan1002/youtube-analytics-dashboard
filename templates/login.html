@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — YouTube Analytics</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-body">
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-logo-box">
+                <div class="login-logo-icon"></div>
+            </div>
+            <h1>YT Analytics</h1>
+            <p>{% if signup %}Create an account{% else %}Sign in to your dashboard{% endif %}</p>
+        </div>
+
+        <div class="login-tabs">
+            <a href="{{ url_for('login') }}" class="login-tab {% if not signup %}active{% endif %}">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+            </a>
+            <a href="{{ url_for('signup') }}" class="login-tab {% if signup %}active{% endif %}">
+                <i class="fa-solid fa-user-plus"></i> Sign Up
+            </a>
+        </div>
+
+        {% if signup_ok %}
+        <div class="login-success">
+            <i class="fa-solid fa-check-circle"></i>
+            {{ signup_ok }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% if signup %}{{ url_for('signup') }}{% else %}{{ url_for('login') }}{% endif %}" class="login-form">
+            {% if error %}
+            <div class="login-error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <div class="login-field">
+                <label for="username">
+                    <i class="fa-solid fa-user"></i>
+                    Username
+                </label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter username"
+                    required
+                    autocomplete="username"
+                >
+            </div>
+
+            <div class="login-field">
+                <label for="password">
+                    <i class="fa-solid fa-lock"></i>
+                    Password
+                </label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter password"
+                    required
+                    {% if signup %}autocomplete="new-password"{% else %}autocomplete="current-password"{% endif %}
+                >
+            </div>
+
+            {% if signup %}
+            <div class="login-field">
+                <label for="confirm">
+                    <i class="fa-solid fa-check"></i>
+                    Confirm Password
+                </label>
+                <input
+                    type="password"
+                    id="confirm"
+                    name="confirm"
+                    placeholder="Confirm password"
+                    required
+                    autocomplete="new-password"
+                >
+            </div>
+            {% endif %}
+
+            <button type="submit" class="login-btn">
+                <i class="fa-solid {% if signup %}fa-user-plus{% else %}fa-arrow-right-to-bracket{% endif %}"></i>
+                {% if signup %}Create Account{% else %}Sign In{% endif %}
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <small>&copy; 2026 YT Analytics Dashboard</small>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

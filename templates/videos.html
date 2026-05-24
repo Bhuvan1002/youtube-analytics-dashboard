@@ -3,107 +3,87 @@
 {% block content %}
 
 <div class="topbar videos-topbar">
-
     <h1>Videos</h1>
-
+    
+    <!-- SEARCH CONTAINER -->
     <div class="youtube-search">
-
         <input
             type="text"
             id="videoSearch"
-            placeholder="Search videos"
+            placeholder="Search channel videos..."
+            autocomplete="off"
         >
-
     </div>
-
 </div>
 
+<!-- YOUTUBE VIDEO FEED GRID -->
 <div class="youtube-feed">
 
     {% for video in videos %}
-
     <div class="youtube-card">
-
-        <!-- THUMBNAIL -->
-
+        
+        <!-- THUMBNAIL WRAPPER -->
         <div class="thumb-container">
-
             <img
                 src="https://img.youtube.com/vi/{{ video.video_id }}/hqdefault.jpg"
                 class="yt-thumbnail"
+                alt="{{ video.video_title }}"
+                loading="lazy"
             >
-
         </div>
 
-        <!-- VIDEO DETAILS -->
-
+        <!-- VIDEO META DETAILS -->
         <div class="yt-details">
-
             <div class="channel-icon">
-
-                ▶
-
+                <i class="fa-brands fa-youtube"></i>
             </div>
-
+            
             <div class="yt-text">
-
-                <h3>
+                <h3 class="video-title-header">
                     {{ video.video_title }}
                 </h3>
 
                 <p>
-                    {{ video.views }} views
-                    •
-                    {{ video.likes }} likes
+                    <span><i class="fa-solid fa-eye"></i> {{ video.views }} views</span>
+                    <span>•</span>
+                    <span><i class="fa-solid fa-thumbs-up"></i> {{ video.likes }} likes</span>
                 </p>
 
                 <span>
-                    {{ video.publish_date }}
+                    <i class="fa-solid fa-calendar-days"></i> Published on {{ video.publish_date }}
                 </span>
-
             </div>
-
         </div>
 
     </div>
-
     {% endfor %}
 
 </div>
+
+<!-- INTERACTIVE FILTER SCRIPT -->
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById('videoSearch');
+    
+    searchInput.addEventListener('input', function() {
+        const value = this.value.toLowerCase().trim();
+        const videoCards = document.querySelectorAll('.youtube-card');
 
-const searchInput =
-document.getElementById('videoSearch');
-
-searchInput.addEventListener(
-    'keyup',
-    function(){
-
-        const value =
-        this.value.toLowerCase();
-
-        const videos =
-        document.querySelectorAll(
-            '.youtube-card'
-        );
-
-        videos.forEach(video => {
-
-            const title =
-            video.innerText.toLowerCase();
-
-            if(title.includes(value)){
-
-                video.style.display='block';
-
-            }else{
-
-                video.style.display='none';
+        videoCards.forEach(card => {
+            const titleElement = card.querySelector('.video-title-header');
+            if (titleElement) {
+                const titleText = titleElement.textContent.toLowerCase();
+                
+                if (titleText.includes(value)) {
+                    card.style.display = 'flex'; // maintain grid flow
+                    card.style.opacity = '1';
+                } else {
+                    card.style.display = 'none';
+                }
             }
         });
-    }
-);
-
+    });
+});
 </script>
 
 {% endblock %}

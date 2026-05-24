@@ -3,107 +3,314 @@
 {% block content %}
 
 <div class="topbar">
-
     <h1>Reports</h1>
+    <div class="report-period">
+        <i class="fa-solid fa-calendar"></i>
+        <span>{{ n }} videos analyzed</span>
+    </div>
+</div>
+
+{% if empty %}
+
+<div class="report-empty">
+    <i class="fa-solid fa-database"></i>
+    <h2>No Data Available</h2>
+    <p>Connect to your YouTube channel and fetch videos to generate reports.</p>
+</div>
+
+{% else %}
+
+<!-- ROW 1: TOP STAT CARDS -->
+<div class="report-stats">
+
+    <div class="report-stat-card">
+        <div class="report-stat-icon" style="background: rgba(255,0,60,0.1); color: var(--accent-red); border-color: rgba(255,0,60,0.15);">
+            <i class="fa-solid fa-eye"></i>
+        </div>
+        <div class="report-stat-info">
+            <small>Total Views</small>
+            <h3>{{ "{:,}".format(total_views) }}</h3>
+            <span><i class="fa-solid fa-arrow-up"></i> Avg {{ "{:,}".format(avg_views) }}/video</span>
+        </div>
+    </div>
+
+    <div class="report-stat-card">
+        <div class="report-stat-icon" style="background: rgba(236,72,153,0.1); color: #ec4899; border-color: rgba(236,72,153,0.15);">
+            <i class="fa-solid fa-heart"></i>
+        </div>
+        <div class="report-stat-info">
+            <small>Total Likes</small>
+            <h3>{{ "{:,}".format(total_likes) }}</h3>
+            <span><i class="fa-solid fa-arrow-up"></i> Avg {{ "{:,}".format(avg_likes) }}/video</span>
+        </div>
+    </div>
+
+    <div class="report-stat-card">
+        <div class="report-stat-icon" style="background: rgba(6,182,212,0.1); color: #06b6d4; border-color: rgba(6,182,212,0.15);">
+            <i class="fa-solid fa-comment"></i>
+        </div>
+        <div class="report-stat-info">
+            <small>Total Comments</small>
+            <h3>{{ "{:,}".format(total_comments) }}</h3>
+            <span><i class="fa-solid fa-arrow-up"></i> Avg {{ "{:,}".format(avg_comments) }}/video</span>
+        </div>
+    </div>
+
+    <div class="report-stat-card">
+        <div class="report-stat-icon" style="background: rgba(139,92,246,0.1); color: var(--accent-purple); border-color: rgba(139,92,246,0.15);">
+            <i class="fa-solid fa-bullseye"></i>
+        </div>
+        <div class="report-stat-info">
+            <small>Engagement Rate</small>
+            <h3>{{ engagement_rate }}%</h3>
+            <span><i class="fa-solid fa-chart-line"></i> Avg {{ avg_engagement }}%/video</span>
+        </div>
+    </div>
+
+    <div class="report-stat-card">
+        <div class="report-stat-icon" style="background: rgba(16,185,129,0.1); color: var(--accent-green); border-color: rgba(16,185,129,0.15);">
+            <i class="fa-solid fa-video"></i>
+        </div>
+        <div class="report-stat-info">
+            <small>Videos Analyzed</small>
+            <h3>{{ n }}</h3>
+            <span><i class="fa-solid fa-database"></i> {{ n }} records</span>
+        </div>
+    </div>
 
 </div>
 
-<!-- REPORT GRID -->
+<!-- ROW 2: PERFORMANCE LEADERS COMPARISON -->
+<div class="report-section-title">
+    <i class="fa-solid fa-trophy"></i> Performance Leaders
+</div>
 
-<div class="report-grid">
+<div class="report-comparison">
 
-    <!-- TOP VIDEO -->
-
-    <div class="report-card large-card">
-
-        <small>Top Performing Video</small>
-
-        <h2>
-            {{ top_video.video_title }}
-        </h2>
-
-        <p>
-            {{ top_video.views }} views
-        </p>
-
+    <div class="comparison-card comparison-top">
+        <div class="comparison-badge">
+            <i class="fa-solid fa-crown"></i> Top Performer
+        </div>
+        <div class="comparison-content">
+            <div class="comparison-thumb">
+                <img src="https://img.youtube.com/vi/{{ top_video.video_id }}/hqdefault.jpg" alt="">
+                <div class="comparison-rank">#1</div>
+            </div>
+            <div class="comparison-details">
+                <h3>{{ top_video.video_title }}</h3>
+                <div class="comparison-metrics">
+                    <div class="comp-metric">
+                        <small>Views</small>
+                        <strong>{{ "{:,}".format(top_video.views) }}</strong>
+                    </div>
+                    <div class="comp-metric">
+                        <small>Likes</small>
+                        <strong>{{ "{:,}".format(top_video.likes) }}</strong>
+                    </div>
+                    <div class="comp-metric">
+                        <small>Comments</small>
+                        <strong>{{ "{:,}".format(top_video.comments) }}</strong>
+                    </div>
+                    <div class="comp-metric">
+                        <small>Engagement</small>
+                        <strong style="color: var(--accent-green);">{{ top_video.engagement_rate }}%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="comparison-gap">
+            <div class="gap-bar">
+                <div class="gap-fill gap-fill-top" style="width: 100%;"></div>
+            </div>
+            <span>Benchmark — 100%</span>
+        </div>
     </div>
 
-    <!-- MOST LIKED -->
-
-    <div class="report-card">
-
-        <small>Most Liked Video</small>
-
-        <h3>
-            {{ most_liked.likes }}
-        </h3>
-
-        <p>
-            {{ most_liked.video_title }}
-        </p>
-
-    </div>
-
-    <!-- ENGAGEMENT -->
-
-    <div class="report-card">
-
-        <small>Engagement Rate</small>
-
-        <h3>
-            {{ engagement_rate }}%
-        </h3>
-
-        <p>
-            Audience Interaction
-        </p>
-
-    </div>
-
-    <!-- LOWEST VIDEO -->
-
-    <div class="report-card large-card">
-
-        <small>Lowest Performing Video</small>
-
-        <h2>
-            {{ lowest_video.video_title }}
-        </h2>
-
-        <p>
-            {{ lowest_video.views }} views
-        </p>
-
+    <div class="comparison-card comparison-low">
+        <div class="comparison-badge" style="background: rgba(100,116,139,0.1); color: var(--text-muted); border-color: rgba(100,116,139,0.15);">
+            <i class="fa-solid fa-arrow-down"></i> Lowest Performer
+        </div>
+        <div class="comparison-content">
+            <div class="comparison-thumb">
+                <img src="https://img.youtube.com/vi/{{ lowest_video.video_id }}/hqdefault.jpg" alt="">
+                <div class="comparison-rank" style="background: var(--text-muted);">Low</div>
+            </div>
+            <div class="comparison-details">
+                <h3>{{ lowest_video.video_title }}</h3>
+                <div class="comparison-metrics">
+                    <div class="comp-metric">
+                        <small>Views</small>
+                        <strong>{{ "{:,}".format(lowest_video.views) }}</strong>
+                    </div>
+                    <div class="comp-metric">
+                        <small>Likes</small>
+                        <strong>{{ "{:,}".format(lowest_video.likes) }}</strong>
+                    </div>
+                    <div class="comp-metric">
+                        <small>Comments</small>
+                        <strong>{{ "{:,}".format(lowest_video.comments) }}</strong>
+                    </div>
+                    <div class="comp-metric">
+                        <small>Engagement</small>
+                        <strong style="color: var(--text-muted);">{{ lowest_video.engagement_rate }}%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="comparison-gap">
+            {% set gap_pct = ((lowest_video.views / top_video.views) * 100) | round(1) %}
+            <div class="gap-bar">
+                <div class="gap-fill gap-fill-low" style="width: {{ gap_pct }}%;"></div>
+            </div>
+            <span>{{ gap_pct }}% of top performer</span>
+        </div>
     </div>
 
 </div>
 
-<!-- AI SUMMARY -->
+<!-- ROW 3: ENGAGEMENT LEADERBOARD -->
+<div class="report-section-title">
+    <i class="fa-solid fa-ranking-star"></i> Engagement Leaderboard
+</div>
 
-<div class="ai-summary">
+<div class="engagement-leaderboard">
+    <div class="leaderboard-header">
+        <span class="lb-rank">#</span>
+        <span class="lb-title">Video</span>
+        <span class="lb-metric">Views</span>
+        <span class="lb-metric">Likes</span>
+        <span class="lb-metric">Comments</span>
+        <span class="lb-metric lb-rate">Engagement</span>
+        <span class="lb-bar">Performance</span>
+    </div>
 
-    <small>Performance Summary</small>
+    {% set max_eng = (videos_by_engagement | map(attribute='engagement_rate') | max) %}
+    {% for video in videos_by_engagement %}
+    <div class="leaderboard-row">
+        <span class="lb-rank">
+            {% if loop.index == 1 %}
+                <i class="fa-solid fa-medal" style="color: #f59e0b;"></i>
+            {% elif loop.index == 2 %}
+                <i class="fa-solid fa-medal" style="color: #94a3b8;"></i>
+            {% elif loop.index == 3 %}
+                <i class="fa-solid fa-medal" style="color: #cd7f32;"></i>
+            {% else %}
+                {{ loop.index }}
+            {% endif %}
+        </span>
+        <span class="lb-title" title="{{ video.video_title }}">
+            <img src="https://img.youtube.com/vi/{{ video.video_id }}/default.jpg" alt="" class="lb-thumb">
+            {{ video.video_title }}
+        </span>
+        <span class="lb-metric">{{ "{:,}".format(video.views) }}</span>
+        <span class="lb-metric">{{ "{:,}".format(video.likes) }}</span>
+        <span class="lb-metric">{{ "{:,}".format(video.comments) }}</span>
+        <span class="lb-metric lb-rate">
+            {% set er = video.engagement_rate %}
+            <span class="er-badge
+                {% if er >= 5 %}er-high
+                {% elif er >= 2 %}er-mid
+                {% else %}er-low
+                {% endif %}">
+                {{ er }}%
+            </span>
+        </span>
+        <span class="lb-bar">
+            {% set bar_pct = ((video.engagement_rate / max_eng) * 100) | round(1) %}
+            <div class="lb-progress">
+                <div class="lb-progress-fill
+                    {% if er >= 5 %}fill-high
+                    {% elif er >= 2 %}fill-mid
+                    {% else %}fill-low
+                    {% endif %}"
+                    style="width: {{ bar_pct }}%;"></div>
+            </div>
+        </span>
+    </div>
+    {% endfor %}
+</div>
 
-    <h2>
-        Channel Analytics Overview
-    </h2>
+<!-- ROW 4: KEY RATIOS + AI SUMMARY -->
+<div class="report-insights">
 
-    <p>
+    <div class="insight-card">
+        <div class="insight-header">
+            <i class="fa-solid fa-divide" style="color: var(--accent-purple);"></i>
+            <h3>Key Ratios</h3>
+        </div>
+        <div class="insight-body">
+            <div class="insight-item">
+                <div class="insight-label">
+                    <span>Likes per View</span>
+                    <strong>{{ likes_per_view }}</strong>
+                </div>
+                <div class="insight-bar">
+                    <div class="insight-fill" style="width: {{ (likes_per_view / 0.1 * 100) | round(1) }}%; background: var(--grad-likes);"></div>
+                </div>
+            </div>
+            <div class="insight-item">
+                <div class="insight-label">
+                    <span>Comments per View</span>
+                    <strong>{{ comments_per_view }}</strong>
+                </div>
+                <div class="insight-bar">
+                    <div class="insight-fill" style="width: {{ (comments_per_view / 0.05 * 100) | round(1) }}%; background: var(--grad-comments);"></div>
+                </div>
+            </div>
+            <div class="insight-item">
+                <div class="insight-label">
+                    <span>Avg Engagement Rate</span>
+                    <strong>{{ avg_engagement }}%</strong>
+                </div>
+                <div class="insight-bar">
+                    <div class="insight-fill" style="width: {{ (avg_engagement / 10 * 100) | round(1) }}%; background: var(--grad-hero);"></div>
+                </div>
+            </div>
+            <div class="insight-item">
+                <div class="insight-label">
+                    <span>Best Engagement</span>
+                    <strong>{{ top_engagement.engagement_rate }}%</strong>
+                </div>
+                <div class="insight-bar">
+                    <div class="insight-fill" style="width: 100%; background: var(--accent-green);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        Your channel currently has
-        {{ total_views }} total views,
-        {{ total_likes }} likes,
-        and
-        {{ total_comments }} comments.
-
-        The highest engagement was observed
-        on videos with strong viewer interaction.
-
-        Current engagement rate is
-        {{ engagement_rate }}%.
-
-    </p>
+    <div class="ai-summary">
+        <small><i class="fa-solid fa-brain"></i> AI Performance Analysis</small>
+        <h2>Channel Diagnostics Summary</h2>
+        <p>
+            Your channel has accumulated <strong>{{ "{:,}".format(total_views) }}</strong> total views,
+            <strong>{{ "{:,}".format(total_likes) }}</strong> likes, and
+            <strong>{{ "{:,}".format(total_comments) }}</strong> comments across
+            <strong>{{ n }}</strong> videos. The overall engagement rate sits at
+            <strong>{{ engagement_rate }}%</strong>, with an average of
+            <strong>{{ "{:,}".format(avg_views) }}</strong> views per video.
+        </p>
+        <p>
+            Your top video <em>"{{ top_video.video_title }}"</em> leads with
+            <strong>{{ "{:,}".format(top_video.views) }}</strong> views and
+            <strong>{{ top_video.engagement_rate }}%</strong> engagement rate —
+            {{ "%.1f" | format((top_video.views / avg_views) * 100) }}% above the channel average.
+            Replicating its format and topic could drive consistent growth.
+        </p>
+        <div class="ai-tags">
+            <span class="ai-tag" style="border-color: rgba(16,185,129,0.2); color: var(--accent-green);">
+                <i class="fa-solid fa-check-circle"></i> {{ videos_by_engagement | selectattr('engagement_rate', '>=', 5) | list | length }} high-engagement videos
+            </span>
+            <span class="ai-tag" style="border-color: rgba(6,182,212,0.2); color: #06b6d4;">
+                <i class="fa-solid fa-chart-line"></i> {{ "%.2f" | format(likes_per_view * 100) }}% like-to-view ratio
+            </span>
+            <span class="ai-tag" style="border-color: rgba(255,0,60,0.2); color: var(--accent-red);">
+                <i class="fa-solid fa-fire"></i> Best: {{ top_engagement.engagement_rate }}% engagement
+            </span>
+        </div>
+    </div>
 
 </div>
+
+{% endif %}
 
 {% endblock %}

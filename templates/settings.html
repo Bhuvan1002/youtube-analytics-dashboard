@@ -2,6 +2,262 @@
 
 {% block content %}
 
-<h1>Settings Page</h1>
+<div class="topbar">
+    <h1>Settings</h1>
+</div>
+
+<!-- SETTINGS GRID LAYOUT -->
+<div class="settings-grid">
+
+    <!-- LEFT COLUMN: ACCOUNT & API CONFIGURATION -->
+    <div class="settings-card">
+        <h3><i class="fa-solid fa-user-gear"></i> Channel Integration</h3>
+        
+        <!-- PROFILE SECTION -->
+        <div class="settings-profile">
+            <div class="settings-avatar">YT</div>
+            <div class="settings-user-info">
+                <h4>YouTube Analytics Creator</h4>
+                <p>Status: Owner &bull; Connected</p>
+            </div>
+        </div>
+
+        <!-- FORMS -->
+        <form method="POST" action="{{ url_for('settings') }}">
+            {% if saved %}
+            <div class="settings-saved">
+                <i class="fa-solid fa-check-circle"></i> Settings saved successfully!
+            </div>
+            {% endif %}
+
+            <div class="settings-form-group">
+                <label for="channel_id">YouTube Channel ID</label>
+                <input 
+                    type="text" 
+                    id="channel_id"
+                    name="channel_id"
+                    value="{{ config.channel_id }}"
+                    placeholder="Enter Channel ID"
+                >
+            </div>
+
+            <div class="settings-form-group">
+                <label for="api_key">YouTube Data API Key</label>
+                <div class="api-key-box">
+                    <input 
+                        type="password" 
+                        id="api_key"
+                        name="api_key"
+                        value="{{ config.api_key }}"
+                        placeholder="Enter API Key"
+                    >
+                    <button 
+                        type="button" 
+                        class="btn-secondary"
+                        onclick="toggleApiVisibility()"
+                        id="visibilityBtn"
+                    >
+                        <i class="fa-solid fa-eye"></i> Show
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-form-group" style="margin-top: 25px;">
+                <label>Database Connection Status</label>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    MySQL Localhost Connected
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button type="submit" class="btn-secondary" style="background: var(--accent-red); border-color: rgba(255, 0, 60, 0.2); flex: 1; font-weight: 600; color: white;">
+                    <i class="fa-solid fa-floppy-disk"></i> Save
+                </button>
+                <button type="button" class="btn-secondary" id="fetchBtn" onclick="fetchYouTubeData()" style="flex: 1; font-weight: 600;">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Fetch Data
+                </button>
+            </div>
+            <div id="fetchStatus" style="margin-top: 12px;"></div>
+        </form>
+    </div>
+
+    <!-- RIGHT COLUMN: PREFERENCES & UTILITIES -->
+    <div class="settings-card">
+        <h3><i class="fa-solid fa-sliders"></i> Preferences &amp; View</h3>
+        
+        <!-- PREFERENCE TOGGLES -->
+        <div class="settings-item">
+            <div class="settings-item-label">
+                <h4>Dark Mode</h4>
+                <p>Switch between dark and light theme</p>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" id="darkModeToggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-label">
+                <h4>Auto-Refresh Feed</h4>
+                <p>Periodically fetch new YouTube statistics</p>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" id="autoRefreshToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-label">
+                <h4>Real-Time Chart Tooltips</h4>
+                <p>Show visual helper details on hover</p>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" checked id="tooltipToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-form-group" style="margin-top: 25px;">
+            <label for="refreshInterval">Database Sync Interval</label>
+            <select id="refreshInterval">
+                <option value="6">Every 6 Hours</option>
+                <option value="12" selected>Every 12 Hours</option>
+                <option value="24">Every 24 Hours</option>
+                <option value="manual">Manual Pull Only</option>
+            </select>
+        </div>
+
+        <div class="settings-form-group">
+            <label for="chartType">Default Dashboard Chart</label>
+            <select id="chartType">
+                <option value="line" selected>Line Trend (Engagement)</option>
+                <option value="bar">Bar (Comments)</option>
+                <option value="doughnut">Doughnut (Likes)</option>
+            </select>
+        </div>
+    </div>
+
+</div>
+
+<!-- SHARE CARD -->
+<div class="settings-card share-card">
+    <h3><i class="fa-solid fa-share-nodes"></i> Share Dashboard</h3>
+    <p class="share-desc">Access your dashboard from any device on the same network.</p>
+    <div class="share-url-box">
+        <input type="text" id="shareUrl" readonly placeholder="Click 'Get Link' to generate">
+        <button class="btn-secondary" id="copyBtn" onclick="copyShareUrl()">
+            <i class="fa-solid fa-copy"></i> Copy
+        </button>
+    </div>
+    <button class="btn-secondary get-link-btn" onclick="getShareLink()">
+        <i class="fa-solid fa-link"></i> Get Link
+    </button>
+    <div class="share-note">
+        <i class="fa-solid fa-shield"></i>
+        <span>Only accessible on your local network. Login required.</span>
+    </div>
+</div>
+
+<script>
+async function getShareLink() {
+    const btn = event.currentTarget;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+    btn.disabled = true;
+    try {
+        const res = await fetch('/api/share-info');
+        const data = await res.json();
+        document.getElementById('shareUrl').value = data.url;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Link Ready';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fa-solid fa-link"></i> Get Link';
+            btn.disabled = false;
+        }, 2000);
+    } catch {
+        btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Failed';
+        btn.disabled = false;
+    }
+}
+
+function copyShareUrl() {
+    const input = document.getElementById('shareUrl');
+    if (!input.value) return;
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    const btn = document.getElementById('copyBtn');
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy';
+    }, 2000);
+}
+
+async function fetchYouTubeData() {
+    const btn = document.getElementById('fetchBtn');
+    const status = document.getElementById('fetchStatus');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Fetching...';
+    status.innerHTML = '<span style="color: var(--text-muted); font-size: 13px;">Fetching latest videos from YouTube...</span>';
+    try {
+        const res = await fetch('/fetch-data');
+        const data = await res.json();
+        if (data.success) {
+            status.innerHTML = '<span style="color: var(--accent-green); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-check-circle"></i> ' + data.message + '</span>';
+        } else {
+            status.innerHTML = '<span style="color: var(--text-accent-red); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-circle-exclamation"></i> ' + data.error + '</span>';
+        }
+    } catch {
+        status.innerHTML = '<span style="color: var(--text-accent-red); font-size: 13px; font-weight: 600;"><i class="fa-solid fa-circle-exclamation"></i> Network error. Is the server running?</span>';
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Fetch Data';
+}
+</script>
+
+<!-- INTERACTIVE SCRIPTS -->
+<script>
+function toggleApiVisibility() {
+    const keyInput = document.getElementById('api_key');
+    const btn = document.getElementById('visibilityBtn');
+    
+    if (keyInput.type === 'password') {
+        keyInput.type = 'text';
+        btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Hide';
+    } else {
+        keyInput.type = 'password';
+        btn.innerHTML = '<i class="fa-solid fa-eye"></i> Show';
+    }
+}
+
+// Dark mode toggle
+(function() {
+    const html = document.documentElement;
+    const toggle = document.getElementById('darkModeToggle');
+
+    function setTheme(isDark) {
+        if (isDark) {
+            html.removeAttribute('data-theme');
+            toggle.checked = true;
+        } else {
+            html.setAttribute('data-theme', 'light');
+            toggle.checked = false;
+        }
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+
+    // Sync with saved preference
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        setTheme(false);
+    } else {
+        setTheme(true);
+    }
+
+    toggle.addEventListener('change', () => {
+        setTheme(toggle.checked);
+    });
+})();
+</script>
 
 {% endblock %}

@@ -3,68 +3,95 @@
 {% block content %}
 
 <div class="topbar">
-
     <h1>Dashboard</h1>
-
 </div>
-<!-- KPI CARDS -->
 
+<!-- KPI CARDS & MAIN VIEW GRID -->
 <div class="dashboard-grid">
 
-    <!-- MAIN CARD -->
-
-    <div class="hero-card">
-
-        <div class="hero-top">
-
-            <div>
-                <small>Total Channel Views</small>
-                <h1>{{ total_views }}</h1>
+    <!-- LEFT COLUMN WITH HERO CARD & TOP FEATURED CONTENT -->
+    <div class="dashboard-left">
+        <div class="hero-card">
+            <div class="hero-top">
+                <div>
+                    <small>Total Channel Views</small>
+                    <h1>{{ total_views }}</h1>
+                </div>
+                <div class="hero-icon">
+                    <i class="fa-solid fa-chart-simple"></i>
+                </div>
             </div>
-
-            <div class="hero-icon">
-                ▶
+            <div class="hero-bottom">
+                <i class="fa-solid fa-circle-play"></i>
+                <span>Live channel statistics update from integrated database</span>
             </div>
+        </div>
+        
+        <!-- FEATURED CONTENT CARD -->
+        <div class="featured-section">
+            <h3><i class="fa-solid fa-star"></i> Channel Highlight</h3>
+            {% if videos %}
+                {% set top_v = videos | max(attribute='views') %}
+                <div class="featured-card">
+                    <div class="featured-left">
+                        <small><i class="fa-solid fa-fire"></i> Top Performing Video</small>
+                        <h2>{{ top_v.video_title }}</h2>
+                        <div class="featured-stats">
+                            <span><i class="fa-solid fa-eye"></i> {{ top_v.views }} Views</span>
+                            <span><i class="fa-solid fa-thumbs-up"></i> {{ top_v.likes }} Likes</span>
+                            <span><i class="fa-solid fa-comment"></i> {{ top_v.comments }} Comments</span>
+                        </div>
+                    </div>
+                    <div class="featured-thumbnail-container">
+                        <img src="https://img.youtube.com/vi/{{ top_v.video_id }}/hqdefault.jpg" class="featured-thumbnail" alt="thumbnail">
+                    </div>
+                </div>
+            {% else %}
+                <div class="featured-card">
+                    <div class="featured-left">
+                        <small>No Data Available</small>
+                        <h2>Connect to your YouTube channel to fetch analytics.</h2>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 
+    <!-- RIGHT COLUMN WITH MINI KEY METRICS -->
+    <div class="dashboard-right">
+        
+        <div class="mini-card">
+            <div class="mini-card-left">
+                <small>Total Likes</small>
+                <h2>{{ total_likes }}</h2>
+            </div>
+            <div class="mini-card-icon likes-icon-box">
+                <i class="fa-solid fa-heart"></i>
+            </div>
         </div>
 
-        <div class="hero-bottom">
-
-            <span>
-                Live Analytics Overview
-            </span>
-
+        <div class="mini-card">
+            <div class="mini-card-left">
+                <small>Total Comments</small>
+                <h2>{{ total_comments }}</h2>
+            </div>
+            <div class="mini-card-icon comments-icon-box">
+                <i class="fa-solid fa-comments"></i>
+            </div>
         </div>
 
-    </div>
-
-    <!-- SIDE CARDS -->
-
-    <div class="mini-card">
-
-        <small>Total Likes</small>
-
-        <h2>{{ total_likes }}</h2>
-
-    </div>
-
-    <div class="mini-card">
-
-        <small>Total Comments</small>
-
-        <h2>{{ total_comments }}</h2>
-
-    </div>
-
-    <div class="mini-card">
-
-        <small>Total Videos</small>
-
-        <h2>{{ videos|length }}</h2>
-
+        <div class="mini-card">
+            <div class="mini-card-left">
+                <small>Total Videos</small>
+                <h2>{{ videos|length }}</h2>
+            </div>
+            <div class="mini-card-icon videos-icon-box">
+                <i class="fa-solid fa-video"></i>
+            </div>
+        </div>
+        
     </div>
 
 </div>
-
 
 {% endblock %}
