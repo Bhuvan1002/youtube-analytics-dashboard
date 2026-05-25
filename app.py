@@ -521,5 +521,331 @@ def share_info():
     })
 
 
+# DOWNLOAD PDF REPORT
+
+@app.route('/download-report')
+
+@login_required
+
+def download_report():
+    from fpdf import FPDF
+    from datetime import datetime
+    from io import BytesIO
+    from flask import send_file
+
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker as mticker
+    import numpy as np
+
+    videos = get_videos()
+    n = len(videos)
+    if n == 0:
+        return jsonify({"success": False, "error": "No videos in database."})
+
+    total_views = sum(v['views'] for v in videos)
+    total_likes = sum(v['likes'] for v in videos)
+    total_comments = sum(v['comments'] for v in videos)
+    avg_views = round(total_views / n)
+    avg_likes = round(total_likes / n)
+    avg_comments = round(total_comments / n)
+    engagement_rate = round(((total_likes + total_comments) / total_views) * 100, 2)
+    top_video = max(videos, key=lambda x: x['views'])
+    lowest_video = min(videos, key=lambda x: x['views'])
+    most_liked = max(videos, key=lambda x: x['likes'])
+
+    for v in videos:
+        v['engagement_rate'] = round(((v['likes'] + v['comments']) / v['views']) * 100, 2)
+    videos_by_engagement = sorted(videos, key=lambda x: x['engagement_rate'], reverse=True)
+    likes_per_view = round(total_likes / total_views, 4)
+    comments_per_view = round(total_comments / total_views, 4)
+    avg_eng = round(sum(v['engagement_rate'] for v in videos) / n, 2)
+
+    video_titles = [v['video_title'] for v in videos]
+    video_views = [v['views'] for v in videos]
+    video_likes = [v['likes'] for v in videos]
+    video_comments = [v['comments'] for v in videos]
+    video_engagement = [v['engagement_rate'] for v in videos]
+
+    def make_chart(fig, dpi=120):
+        buf = BytesIO()
+        fig.savefig(buf, format='png', dpi=dpi, bbox_inches='tight', facecolor='#060913', edgecolor='none')
+        buf.seek(0)
+        plt.close(fig)
+        return buf
+
+    def style_ax(ax):
+        ax.set_facecolor('#060913')
+        ax.tick_params(colors='#94a3b8', labelsize=8)
+        ax.spines['bottom'].set_color((1, 1, 1, 0.08))
+        ax.spines['top'].set_color('none')
+        ax.spines['left'].set_color((1, 1, 1, 0.08))
+        ax.spines['right'].set_color('none')
+        ax.xaxis.label.set_color('#94a3b8')
+        ax.yaxis.label.set_color('#94a3b8')
+        ax.title.set_color('#f8fafc')
+        for label in ax.get_xticklabels() + ax.get_yticklabels():
+            label.set_fontsize(8)
+
+    colors = ['#ff003c','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ec4899','#3b82f6','#14b8a6','#84cc16','#a855f7']
+    CHART_W = 4.0
+    CHART_H = 2.8
+
+    def new_chart():
+        fig, ax = plt.subplots(figsize=(CHART_W, CHART_H))
+        fig.patch.set_facecolor('#060913')
+        style_ax(ax)
+        return fig, ax
+
+    chart_images = []
+
+    if n > 0:
+        # --- CHART 1: Views & Engagement Trend ---
+        fig, ax = new_chart()
+        short_titles = [t[:16] + '...' if len(t) > 16 else t for t in video_titles]
+        xs = list(range(len(video_views)))
+        ax.plot(xs, video_views, color='#ff003c', linewidth=1.5, marker='o', markersize=2.5, label='Views')
+        ax.plot(xs, video_likes, color='#06b6d4', linewidth=1.5, marker='s', markersize=2, label='Likes')
+        ax.fill_between(xs, video_views, alpha=0.07, color='#ff003c')
+        ax.set_xticks(xs)
+        ax.set_xticklabels(short_titles, rotation=15, ha='right', fontsize=5.5)
+        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'{int(x):,}'))
+        ax.legend(facecolor='#0d1426', labelcolor='#94a3b8', fontsize=6, framealpha=0.8, loc='upper left')
+        ax.set_title('Views & Engagement Trend', fontsize=9, fontweight='bold', color='#f8fafc', pad=6)
+        fig.tight_layout()
+        chart_images.append(make_chart(fig))
+
+        # --- CHART 2: Likes Distribution (Pie) ---
+        fig, ax = plt.subplots(figsize=(CHART_W, CHART_H))
+        fig.patch.set_facecolor('#060913')
+        wedges, texts, autotexts = ax.pie(
+            video_likes, labels=None, autopct='%1.1f%%',
+            colors=colors[:n], startangle=90, pctdistance=0.7,
+            wedgeprops={'linewidth': 1.5, 'edgecolor': '#060913'}
+        )
+        for t in autotexts:
+            t.set_color('#f8fafc')
+            t.set_fontsize(5.5)
+        ax.set_title('Likes Distribution', fontsize=9, fontweight='bold', color='#f8fafc', pad=6)
+        centre_circle = plt.Circle((0, 0), 0.4, fc='#060913')
+        ax.add_artist(centre_circle)
+        ax.text(0, -0.12, f'{total_likes:,}', ha='center', va='center', fontsize=12, fontweight='bold', color='#f8fafc')
+        ax.text(0, -0.25, 'Total Likes', ha='center', va='center', fontsize=5.5, color='#94a3b8')
+        fig.tight_layout()
+        chart_images.append(make_chart(fig))
+
+        # --- CHART 3: Comments Volume (Horizontal Bar) ---
+        fig, ax = new_chart()
+        short_titles_h = [t[:14] + '...' if len(t) > 14 else t for t in video_titles]
+        ax.barh(short_titles_h[::-1], video_comments[::-1], height=0.5, color=colors[:n])
+        ax.set_title('Comments Volume', fontsize=9, fontweight='bold', color='#f8fafc', pad=6)
+        ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'{int(x):,}'))
+        fig.tight_layout()
+        chart_images.append(make_chart(fig))
+
+        # --- CHART 4: Views Timeline ---
+        fig, ax = new_chart()
+        zipped = sorted(zip(video_titles, video_views, [v['publish_date'] for v in videos]), key=lambda x: x[2])
+        tl_views = [v for _, v, _ in zipped]
+        tl_labels = [d.strftime('%b %Y') if hasattr(d, 'strftime') else str(d)[:7] for _, _, d in zipped]
+        xs = list(range(len(tl_views)))
+        ax.plot(xs, tl_views, color='#10b981', linewidth=1.5, marker='o', markersize=3)
+        ax.fill_between(xs, tl_views, alpha=0.08, color='#10b981')
+        ax.set_xticks(xs)
+        ax.set_xticklabels(tl_labels, fontsize=6)
+        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'{int(x):,}'))
+        ax.set_title('Views Timeline', fontsize=9, fontweight='bold', color='#f8fafc', pad=6)
+        fig.tight_layout()
+        chart_images.append(make_chart(fig))
+
+        # --- CHART 5: Engagement Rate per Video ---
+        fig, ax = new_chart()
+        er_sorted = sorted(zip(video_titles, video_engagement), key=lambda x: x[1], reverse=True)
+        er_titles, er_vals = zip(*er_sorted)
+        er_labels = [t[:14] + '...' if len(t) > 14 else t for t in er_titles[:7]]
+        er_vals = list(er_vals[:7])
+        colors_er = ['#10b981' if v >= 5 else '#06b6d4' if v >= 2 else '#64748b' for v in er_vals]
+        ax.barh(er_labels[::-1], er_vals[::-1], height=0.5, color=colors_er[::-1])
+        ax.set_title('Engagement Rate per Video (Top 7)', fontsize=9, fontweight='bold', color='#f8fafc', pad=6)
+        fig.tight_layout()
+        chart_images.append(make_chart(fig))
+
+        # --- CHART 6: Views vs Likes ---
+        fig, ax = new_chart()
+        sizes = [max(15, min(120, c/4)) for c in video_comments]
+        ax.scatter(video_views, video_likes, s=sizes, c='#8b5cf6', alpha=0.55, edgecolors='#8b5cf6', linewidth=0.5)
+        ax.set_xlabel('Views')
+        ax.set_ylabel('Likes')
+        ax.set_title('Views vs Likes (size = Comments)', fontsize=9, fontweight='bold', color='#f8fafc', pad=6)
+        ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'{int(x):,}'))
+        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'{int(x):,}'))
+        fig.tight_layout()
+        chart_images.append(make_chart(fig))
+
+        # --- CHART 7: Engagement Density ---
+        fig, ax = new_chart()
+        density = [round((l + c) / max(v, 1) * 100, 2) for l, c, v in zip(video_likes, video_comments, video_views)]
+        short_d = [t[:12] + '...' if len(t) > 12 else t for t in video_titles]
+        ax.bar(short_d, density, color=colors[:n], width=0.5)
+        ax.set_title('Engagement Density', fontsize=9, fontweight='bold', color='#f8fafc', pad=6)
+        ax.set_xticklabels(short_d, rotation=15, ha='right', fontsize=5.5)
+        fig.tight_layout()
+        chart_images.append(make_chart(fig))
+
+    # --- BUILD PDF (2 pages: text + all charts in rows of 2) ---
+    pdf = FPDF(orientation='P', unit='mm', format='A4')
+    pdf.set_margin(15)
+    pdf.add_page()
+
+    red = (255, 0, 60)
+    dark = (15, 23, 42)
+    gray = (100, 116, 139)
+
+    chart_labels = [
+        ('Views & Engagement Trend', 'Views and likes tracked across all analyzed videos showing performance patterns'),
+        ('Likes Distribution', 'Proportional breakdown of total likes each video has received'),
+        ('Comments Volume', 'Total number of comments generated per video in the channel'),
+        ('Views Timeline', 'Channel viewership trend plotted chronologically by publish date'),
+        ('Engagement Rate per Video', 'Top 7 videos ranked by engagement rate (likes + comments / views)'),
+        ('Views vs Likes Correlation', 'Bubble chart showing relationship between views, likes, and comments'),
+        ('Engagement Density', 'Engagement rate distribution across each video in the channel'),
+    ]
+
+    # ============ PAGE 1: Title + Summary + Charts 1-2 ============
+    pdf.set_fill_color(15, 23, 42)
+    pdf.rect(0, 0, 210, 32, 'F')
+    pdf.set_font('Helvetica', 'B', 20)
+    pdf.set_text_color(248, 250, 252)
+    pdf.set_y(8)
+    pdf.cell(0, 10, 'YouTube Analytics Report', new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.set_font('Helvetica', '', 8)
+    pdf.set_text_color(148, 163, 184)
+    dt = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+    pdf.cell(0, 5, f'Generated: {dt}  |  {n} videos analyzed', new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.set_y(34)
+
+    pdf.set_draw_color(*red)
+    pdf.set_line_width(0.3)
+    pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+    pdf.ln(4)
+
+    # --- Summary Table ---
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.set_text_color(*dark)
+    pdf.cell(0, 7, 'Channel Summary', new_x="LMARGIN", new_y="NEXT")
+    cw = [30, 22, 30, 22, 30, 22]
+    pdf.set_font('Helvetica', 'B', 6)
+    pdf.set_fill_color(241, 245, 249)
+    pdf.set_text_color(*dark)
+    for i, h in enumerate(['Metric','Value','Metric','Value','Metric','Value']):
+        pdf.cell(cw[i], 5, h, border=1, fill=True, align='C')
+    pdf.ln()
+    pdf.set_font('Helvetica', '', 6)
+    rows = [
+        ['Total Views', f'{total_views:,}', 'Total Likes', f'{total_likes:,}', 'Total Comments', f'{total_comments:,}'],
+        ['Avg Views', f'{avg_views:,}', 'Avg Likes', f'{avg_likes:,}', 'Avg Comments', f'{avg_comments:,}'],
+        ['Engagement Rate', f'{engagement_rate}%', 'Likes/View', f'{likes_per_view}', 'Comments/View', f'{comments_per_view}'],
+    ]
+    for row in rows:
+        for i, v in enumerate(row):
+            pdf.cell(cw[i], 5, v, border=1, align='C')
+        pdf.ln()
+    pdf.ln(5)
+
+    # --- Performance Leaders ---
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.set_text_color(*dark)
+    pdf.cell(0, 6, 'Performance Leaders', new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font('Helvetica', '', 6.5)
+    for label, clr, v in [('Top', red, top_video), ('Lowest', gray, lowest_video)]:
+        pdf.set_text_color(*clr)
+        pdf.cell(7, 4, f'[{label}]')
+        pdf.set_text_color(*dark)
+        t = v['video_title'][:55] + '...' if len(v['video_title']) > 55 else v['video_title']
+        pdf.cell(80, 4, t)
+        pdf.set_text_color(*gray)
+        pdf.cell(0, 4, f"Views: {v['views']:,}  Likes: {v['likes']:,}  Comments: {v['comments']:,}  ER: {v['engagement_rate']}%", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_text_color(236, 72, 153)
+    pdf.cell(7, 4, '[Liked]')
+    pdf.set_text_color(*dark)
+    t = most_liked['video_title'][:55] + '...' if len(most_liked['video_title']) > 55 else most_liked['video_title']
+    pdf.cell(80, 4, t)
+    pdf.set_text_color(*gray)
+    pdf.cell(0, 4, f"Likes: {most_liked['likes']:,}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+
+    # --- Diagnostics ---
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.set_text_color(*dark)
+    pdf.cell(0, 6, 'Channel Diagnostics', new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font('Helvetica', '', 6.5)
+    pdf.set_text_color(71, 85, 105)
+    summary = (
+        f"{total_views:,} total views, {total_likes:,} likes, {total_comments:,} comments across {n} videos. "
+        f"Overall engagement: {engagement_rate}%. "
+        f"Top: \"{top_video['video_title'][:45]}\" at {top_video['views']:,} views ({top_video['engagement_rate']}% ER)."
+    )
+    pdf.multi_cell(0, 3.5, summary)
+    pdf.ln(3)
+
+    def place_chart_pair(idx1, idx2, y_start):
+        pdf.set_y(y_start)
+        pdf.set_font('Helvetica', 'B', 8)
+        pdf.set_text_color(*dark)
+        pdf.set_xy(15, y_start)
+        pdf.cell(82, 4, chart_labels[idx1][0], align='C')
+        pdf.set_xy(105, y_start)
+        pdf.cell(82, 4, chart_labels[idx2][0], align='C')
+        pdf.set_font('Helvetica', '', 5.5)
+        pdf.set_text_color(*gray)
+        pdf.set_xy(15, y_start + 4)
+        pdf.cell(82, 3, chart_labels[idx1][1], align='C')
+        pdf.set_xy(105, y_start + 4)
+        pdf.cell(82, 3, chart_labels[idx2][1], align='C')
+        img_y = y_start + 8
+        buf1 = chart_images[idx1]
+        buf1.seek(0)
+        pdf.image(buf1, x=15, y=img_y, w=82)
+        buf1.close()
+        buf2 = chart_images[idx2]
+        buf2.seek(0)
+        pdf.image(buf2, x=105, y=img_y, w=82)
+        buf2.close()
+
+    ch_h = 82 * CHART_H / CHART_W
+
+    # --- Charts 1 & 2 side by side ---
+    place_chart_pair(0, 1, pdf.get_y())
+
+    # ============ PAGE 2: Charts 3-7 ============
+    pdf.add_page()
+    place_chart_pair(2, 3, 15)
+    place_chart_pair(4, 5, 15 + ch_h + 14)
+    # Chart 7 centered at bottom
+    y7 = 15 + 2 * (ch_h + 14)
+    pdf.set_y(y7)
+    pdf.set_font('Helvetica', 'B', 8)
+    pdf.set_text_color(*dark)
+    pdf.cell(0, 4, chart_labels[6][0], new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.set_font('Helvetica', '', 5.5)
+    pdf.set_text_color(*gray)
+    pdf.cell(0, 3, chart_labels[6][1], new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.ln(2)
+    buf7 = chart_images[6]
+    buf7.seek(0)
+    pdf.image(buf7, x=38, w=135)
+    buf7.close()
+
+    pdf_buf = BytesIO(bytes(pdf.output()))
+    pdf_buf.seek(0)
+    return send_file(
+        pdf_buf,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f'youtube_report_{datetime.now().strftime("%Y%m%d")}.pdf'
+    )
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

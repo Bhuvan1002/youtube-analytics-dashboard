@@ -4,9 +4,16 @@
 
 <div class="topbar">
     <h1>Reports</h1>
-    <div class="report-period">
-        <i class="fa-solid fa-calendar"></i>
-        <span>{{ n }} videos analyzed</span>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <div class="report-period">
+            <i class="fa-solid fa-calendar"></i>
+            <span>{{ n }} videos analyzed</span>
+        </div>
+        {% if not empty %}
+        <a href="/download-report" class="btn-secondary" style="text-decoration: none; font-weight: 600; padding: 10px 18px; border-radius: 12px; background: rgba(255, 0, 60, 0.08); border-color: rgba(255, 0, 60, 0.15); color: var(--accent-red); display: flex; align-items: center; gap: 8px; font-size: 13px;">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF
+        </a>
+        {% endif %}
     </div>
 </div>
 

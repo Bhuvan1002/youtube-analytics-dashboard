@@ -142,57 +142,22 @@
 
 </div>
 
-<!-- SHARE CARD -->
+<!-- PDF REPORT CARD -->
 <div class="settings-card share-card">
-    <h3><i class="fa-solid fa-share-nodes"></i> Share Dashboard</h3>
-    <p class="share-desc">Access your dashboard from any device on the same network.</p>
-    <div class="share-url-box">
-        <input type="text" id="shareUrl" readonly placeholder="Click 'Get Link' to generate">
-        <button class="btn-secondary" id="copyBtn" onclick="copyShareUrl()">
-            <i class="fa-solid fa-copy"></i> Copy
-        </button>
+    <h3><i class="fa-solid fa-file-pdf"></i> Export Report</h3>
+    <p class="share-desc">Download a PDF report of your channel analytics — includes summary stats, performance leaders, engagement leaderboard, and key ratios.</p>
+    <div style="display: flex; gap: 12px; margin-top: 10px;">
+        <a href="/download-report" class="btn-secondary" id="pdfDownloadBtn" style="flex: 1; text-align: center; text-decoration: none; font-weight: 600; padding: 14px; border-radius: 12px; background: var(--accent-red); border-color: rgba(255, 0, 60, 0.2); color: white;">
+            <i class="fa-solid fa-download"></i> Download PDF Report
+        </a>
     </div>
-    <button class="btn-secondary get-link-btn" onclick="getShareLink()">
-        <i class="fa-solid fa-link"></i> Get Link
-    </button>
-    <div class="share-note">
-        <i class="fa-solid fa-shield"></i>
-        <span>Only accessible on your local network. Login required.</span>
+    <div class="share-note" style="margin-top: 16px;">
+        <i class="fa-solid fa-chart-simple"></i>
+        <span>Includes all video analytics and performance data.</span>
     </div>
 </div>
 
 <script>
-async function getShareLink() {
-    const btn = event.currentTarget;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
-    btn.disabled = true;
-    try {
-        const res = await fetch('/api/share-info');
-        const data = await res.json();
-        document.getElementById('shareUrl').value = data.url;
-        btn.innerHTML = '<i class="fa-solid fa-check"></i> Link Ready';
-        setTimeout(() => {
-            btn.innerHTML = '<i class="fa-solid fa-link"></i> Get Link';
-            btn.disabled = false;
-        }, 2000);
-    } catch {
-        btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Failed';
-        btn.disabled = false;
-    }
-}
-
-function copyShareUrl() {
-    const input = document.getElementById('shareUrl');
-    if (!input.value) return;
-    input.select();
-    navigator.clipboard.writeText(input.value);
-    const btn = document.getElementById('copyBtn');
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-    setTimeout(() => {
-        btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy';
-    }, 2000);
-}
-
 async function fetchYouTubeData() {
     const btn = document.getElementById('fetchBtn');
     const status = document.getElementById('fetchStatus');
